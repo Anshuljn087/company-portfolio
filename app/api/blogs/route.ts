@@ -4,7 +4,11 @@ import { NextResponse } from "next/server";
 
 export async function GET() {
   await connectDB();
-  const blogs = await Blog.find({ published: true }).sort({ createdAt: -1 });
+
+  const blogs = await Blog.find({ published: true }).sort({
+    createdAt: -1,
+  });
+
   return NextResponse.json(blogs);
 }
 
