@@ -1,10 +1,13 @@
 import Link from "next/link";
+import { connectDB } from "@/src/lib/db";
+import { Blog } from "@/src/models/Blog";
 
 async function getBlogs() {
-    const res = await fetch("http://localhost:3000/api/blogs", {
-        cache: "no-store",
-    });
-    return res.json();
+    await connectDB();
+
+    return Blog.find({ published: true })
+        .sort({ createdAt: -1 })
+        .lean();
 }
 
 export default async function BlogPage() {
@@ -17,21 +20,24 @@ export default async function BlogPage() {
             </h1>
 
             {blogs.length === 0 && (
-                <p className="text-[var(--muted)]">No blogs published yet.</p>
+                <p className="text-[var(--muted)]">
+                    No blogs published yet.
+                </p>
             )}
 
             <div className="grid md:grid-cols-2 gap-8">
                 {blogs.map((blog: any) => (
-                    <Link key={blog._id} href={`/blog/${blog.slug}`}>
-                        <div
-                            key={blog._id}
-                            className="border border-[#1E293B] rounded-lg p-6"
-                        >
-                            <h2 className="text-xl font-semibold mb-2">
-                                {blog.title}
-                            </h2>
-                            <p className="text-[var(--muted)]">{blog.excerpt}</p>
-                        </div>
+                    <Link
+                        key={blog._id}
+                        href={`/blog/${encodeURIComponent(blog.slug)}`}
+                        className="border border-[#1E293B] rounded-lg p-6 hover:border-[var(--primary)] transition"
+                    >
+                        <h2 className="text-xl font-semibold mb-2">
+                            {blog.title}
+                        </h2>
+                        <p className="text-[var(--muted)]">
+                            {blog.excerpt}
+                        </p>
                     </Link>
                 ))}
             </div>
