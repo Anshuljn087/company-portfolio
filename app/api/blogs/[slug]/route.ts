@@ -4,21 +4,40 @@ import { NextResponse } from "next/server";
 
 export async function GET(
   req: Request,
-  { params }: { params: { slug: string } }
+  context: { params: Promise<{ slug: string }> }
 ) {
-  await connectDB();
+  try {
+    // 🔥 FIX: await params
+    const { slug } = await context.params;
 
-  const blog = await Blog.findOne({
-    slug: params.slug,
-    published: true,
-  });
+    if (!slug) {
+      return NextResponse.json(
+        { message: "Slug is required" },
+        { status: 400 }
+      );
+    }
 
-  if (!blog) {
+    await connectDB();
+
+    const blog = await Blog.findOne({
+      slug: slug.toLowerCase(),
+      published: true,
+    });
+
+    if (!blog) {
+      return NextResponse.json(
+        { message: "Blog not found" },
+        { status: 404 }
+      );
+    }
+
+    return NextResponse.json(blog);
+  } catch (error) {
+    console.error("BLOG SLUG API ERROR:", error);
+
     return NextResponse.json(
-      { message: "Blog not found" },
-      { status: 404 }
+      { message: "Internal Server Error" },
+      { status: 500 }
     );
   }
-
-  return NextResponse.json(blog);
 }

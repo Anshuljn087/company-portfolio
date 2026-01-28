@@ -22,7 +22,7 @@ export default async function BlogPage() {
 
             <div className="grid md:grid-cols-2 gap-8">
                 {blogs.map((blog: any) => (
-                    <Link href={`/blog/${blog.slug}`}>
+                    <Link key={blog._id} href={`/blog/${blog.slug}`}>
                         <div
                             key={blog._id}
                             className="border border-[#1E293B] rounded-lg p-6"

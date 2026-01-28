@@ -16,6 +16,9 @@ export async function POST(req: Request) {
   await connectDB();
   const body = await req.json();
 
-  const blog = await Blog.create(body);
+  const blog = await Blog.create({
+    ...body,
+    slug: body.slug.toLowerCase(),
+  });
   return NextResponse.json(blog, { status: 201 });
 }
