@@ -6,7 +6,9 @@ export default function Footer() {
       <div className="max-w-7xl mx-auto px-6 py-10 grid md:grid-cols-3 gap-8 text-sm text-[var(--muted)]">
 
         <div>
-          <h3 className="text-[var(--text)] font-semibold mb-3">YourCompany</h3>
+          <Link href="/" className="text-[var(--text)] font-semibold mb-3 block">
+            Gangwal IT Services
+          </Link>
           <p>
             We provide dedicated developers and end-to-end software development services.
           </p>
@@ -14,12 +16,45 @@ export default function Footer() {
 
         <div>
           <h4 className="text-[var(--text)] font-semibold mb-3">Quick Links</h4>
+
           <ul className="space-y-2">
-            <li><Link href="/services">Services</Link></li>
-            <li><Link href="/hire-developers">Hire Developers</Link></li>
-            <li><Link href="/blog">Blog</Link></li>
-            <li><Link href="/contact">Contact</Link></li>
+            <li>
+              <Link
+                href="/services"
+                className="hover:text-[var(--primary)] transition"
+              >
+                Services
+              </Link>
+            </li>
+
+            <li>
+              <Link
+                href="/hire-developers"
+                className="hover:text-[var(--primary)] transition"
+              >
+                Hire Developers
+              </Link>
+            </li>
+
+            <li>
+              <Link
+                href="/blog"
+                className="hover:text-[var(--primary)] transition"
+              >
+                Blog
+              </Link>
+            </li>
+
+            <li>
+              <Link
+                href="/contact"
+                className="hover:text-[var(--primary)] transition"
+              >
+                Contact
+              </Link>
+            </li>
           </ul>
+
         </div>
 
         <div>
