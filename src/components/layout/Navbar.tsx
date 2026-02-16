@@ -25,6 +25,9 @@ export default function Navbar() {
           <Link href="/hire-developers" className="hover:text-[var(--primary)]">
             Hire Developers
           </Link>
+          <Link href="/careers" className="hover:text-[var(--primary)]">
+            Careers
+          </Link>
           <Link href="/blog" className="hover:text-[var(--primary)]">
             Blog
           </Link>

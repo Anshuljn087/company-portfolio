@@ -26,7 +26,11 @@ export default function Footer() {
                 Services
               </Link>
             </li>
-
+            <li>
+              <Link href="/careers" className="hover:text-[var(--primary)] transition">
+                Careers
+              </Link>
+            </li>
             <li>
               <Link
                 href="/hire-developers"
