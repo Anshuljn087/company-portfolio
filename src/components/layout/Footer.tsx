@@ -30,6 +30,14 @@ export default function Footer() {
           <ul className="space-y-2">
             <li>
               <Link
+                href="/about"
+                className="hover:text-[var(--primary)] transition"
+              >
+                About Us
+              </Link>
+            </li>
+            <li>
+              <Link
                 href="/careers"
                 className="hover:text-[var(--primary)] transition"
               >

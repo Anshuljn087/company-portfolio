@@ -23,7 +23,7 @@ export default function Navbar() {
 
         {/* Desktop Menu */}
         <div className="hidden md:flex items-center gap-8 text-sm">
-          <Link href="/about" onClick={() => setOpen(false)}>
+          <Link href="/about">
             About
           </Link>
           <Link href="/careers" className="hover:text-[var(--primary)]">
