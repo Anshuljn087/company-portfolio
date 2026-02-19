@@ -1,15 +1,23 @@
+import { NextRequest, NextResponse } from "next/server";
 import { connectDB } from "@/src/lib/db";
 import { Job } from "@/src/models/Job";
-import { NextResponse } from "next/server";
 
 export async function GET(
-  req:Request,
-  {params}:{params:{id:string}}
-){
-
+  req: NextRequest,
+  context: { params: Promise<{ id: string }> }
+) {
   await connectDB();
 
-  const job = await Job.findById(params.id);
+  const { id } = await context.params;
+
+  const job = await Job.findById(id);
+
+  if (!job) {
+    return NextResponse.json(
+      { message: "Job not found" },
+      { status: 404 }
+    );
+  }
 
   return NextResponse.json(job);
 }
