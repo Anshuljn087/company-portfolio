@@ -1,10 +1,19 @@
+import { headers } from "next/headers";
 import Link from "next/link";
 
 async function getJobs() {
-  const res = await fetch(
-    `${process.env.NEXT_PUBLIC_SITE_URL}/api/jobs`,
-    { cache: "no-store" }
-  );
+  const headersList = await headers();
+
+  const host = headersList.get("host");
+
+  if (!host) return null;
+
+  const protocol = process.env.NODE_ENV === "development" ? "http" : "https";
+
+  const url = `${protocol}://${host}/api/jobs`;
+
+  const res = await fetch(url, { cache: "no-store" });
+
   return res.json();
 }
 
@@ -12,32 +21,35 @@ export default async function CareersPage() {
   const jobs = await getJobs();
 
   return (
-    <section className="max-w-5xl mx-auto px-6 py-20">
-      <h1 className="text-4xl font-bold mb-10 text-[var(--primary)]">
+    <main className="max-w-6xl mx-auto px-6 py-20">
+      <h1 className="text-5xl font-bold mb-12 text-[var(--primary)]">
         Careers at Gangwal IT Services
       </h1>
 
-      <div className="space-y-6">
-        {jobs.map((job: any) => (
-          <div
-            key={job._id}
-            className="border border-[#1E293B] p-6 rounded"
-          >
-            <h2 className="text-xl font-semibold">{job.title}</h2>
-            <p className="text-sm text-[var(--muted)] mb-3">
-              {job.experience} • {job.location}
-            </p>
-            <p className="mb-4">{job.description}</p>
+      {jobs.length === 0 && <p>No open roles currently.</p>}
 
-            <Link
-              href={`/careers/${job._id}`}
-              className="text-[var(--primary)] font-medium"
+      <div className="grid gap-8">
+        {jobs.map((job: any) => (
+          <Link key={job._id} href={`/careers/${job._id}`}>
+            <div
+              className="
+              p-8 rounded-2xl
+              border border-[#D5E2EC]
+              hover:border-[var(--primary)]
+              transition cursor-pointer
+              bg-white
+              shadow-sm hover:shadow-lg
+            "
             >
-              Apply →
-            </Link>
-          </div>
+              <h2 className="text-2xl font-semibold">{job.title}</h2>
+
+              <p className="text-[var(--muted)] mt-2">
+                {job.location || "Remote"}
+              </p>
+            </div>
+          </Link>
         ))}
       </div>
-    </section>
+    </main>
   );
 }

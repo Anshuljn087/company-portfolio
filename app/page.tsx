@@ -209,7 +209,7 @@ export default function Home() {
           />
 
           <div>
-            <h2 className="text-4xl font-bold mb-6">
+            <h2 className="text-4xl text-[var(--muted)] font-bold mb-6">
               Why companies work with us
             </h2>
 

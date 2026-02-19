@@ -1,5 +1,6 @@
 "use client";
 
+import Image from "next/image";
 import Link from "next/link";
 import { useState } from "react";
 
@@ -10,20 +11,20 @@ export default function Navbar() {
     <header className="w-full border-b border-[#1E293B]">
       <nav className="max-w-7xl mx-auto px-6 py-4 flex items-center justify-between">
         {/* Logo */}
-        <Link
-          href="/"
-          className="text-xl font-bold text-[var(--primary)]"
-        >
-          Gangwal IT Services
+        <Link href="/" className="text-xl font-bold text-[var(--primary)]">
+          <Image
+            src="/gangwal-logo.jpg"
+            alt="Gangwal IT Services"
+            width={100}
+            height={100}
+            priority
+          />
         </Link>
 
         {/* Desktop Menu */}
         <div className="hidden md:flex items-center gap-8 text-sm">
-          <Link href="/services" className="hover:text-[var(--primary)]">
-            Services
-          </Link>
-          <Link href="/hire-developers" className="hover:text-[var(--primary)]">
-            Hire Developers
+          <Link href="/about" onClick={() => setOpen(false)}>
+            About
           </Link>
           <Link href="/careers" className="hover:text-[var(--primary)]">
             Careers
@@ -33,12 +34,6 @@ export default function Navbar() {
           </Link>
           <Link href="/contact" className="hover:text-[var(--primary)]">
             Contact
-          </Link>
-          <Link
-            href="/contact"
-            className="px-4 py-2 rounded-lg bg-[var(--primary)] text-white"
-          >
-            Get Quote
           </Link>
         </div>
 
@@ -65,12 +60,8 @@ export default function Navbar() {
               ✕
             </button>
 
-            <Link href="/services" onClick={() => setOpen(false)}>
-              Services
-            </Link>
-
-            <Link href="/hire-developers" onClick={() => setOpen(false)}>
-              Hire Developers
+            <Link href="/about" onClick={() => setOpen(false)}>
+              About
             </Link>
 
             <Link href="/blog" onClick={() => setOpen(false)}>
@@ -79,14 +70,6 @@ export default function Navbar() {
 
             <Link href="/contact" onClick={() => setOpen(false)}>
               Contact
-            </Link>
-
-            <Link
-              href="/contact"
-              onClick={() => setOpen(false)}
-              className="mt-4 px-4 py-2 rounded-lg bg-[var(--primary)] text-white text-center"
-            >
-              Get Quote
             </Link>
           </div>
         </div>

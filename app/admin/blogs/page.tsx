@@ -1,7 +1,7 @@
 import Link from "next/link";
 
 async function getBlogs() {
-  const res = await fetch("http://localhost:3000/api/blogs", {
+  const res = await fetch("/api/blogs", {
     cache: "no-store",
   });
   return res.json();
