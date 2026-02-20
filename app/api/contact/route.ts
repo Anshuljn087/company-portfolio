@@ -1,28 +1,46 @@
-import nodemailer from "nodemailer";
 import { NextResponse } from "next/server";
+import nodemailer from "nodemailer";
 
-export async function POST(req:Request){
+export async function POST(req: Request) {
+  try {
+    const body = await req.json();
 
-  const form = await req.formData();
+    const transporter = nodemailer.createTransport({
+      host: process.env.SMTP_HOST,
+      port: Number(process.env.SMTP_PORT),
+      secure: false,
+      auth: {
+        user: process.env.SMTP_EMAIL,
+        pass: process.env.SMTP_PASS,
+      },
+      tls: {
+        rejectUnauthorized: false,
+      },
+    });
 
-  const email = form.get("email");
-  const phone = form.get("phone");
-  const message = form.get("message");
+    await transporter.sendMail({
+      from: `"Website Contact" <${process.env.SMTP_EMAIL}>`,
+      to: process.env.ADMIN_EMAIL,
+      subject: "New Contact Message",
+      text: `
+Email: ${body.email}
+Phone: ${body.phone}
 
-  const transporter = nodemailer.createTransport({
-    service:"gmail",
-    auth:{
-      user:process.env.SMTP_EMAIL,
-      pass:process.env.SMTP_PASS,
-    }
-  });
+Message:
+${body.message}
+      `,
+    });
 
-  await transporter.sendMail({
-    from:process.env.SMTP_EMAIL,
-    to:process.env.ADMIN_EMAIL,
-    subject:"New Contact Request",
-    text:`Email: ${email}\nPhone:${phone}\nMessage:${message}`
-  });
+    return NextResponse.json({ success: true });
+  } catch (err: any) {
+    console.error("CONTACT ERROR:", err);
 
-  return NextResponse.json({success:true});
+    return NextResponse.json(
+      {
+        success: false,
+        error: err.message,
+      },
+      { status: 500 },
+    );
+  }
 }

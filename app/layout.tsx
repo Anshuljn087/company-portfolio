@@ -2,6 +2,7 @@ import Navbar from "@/src/components/layout/Navbar";
 import "./globals.css";
 import type { Metadata } from "next";
 import Footer from "@/src/components/layout/Footer";
+import { Toaster } from "react-hot-toast";
 
 export const metadata: Metadata = {
   title: "Your Company Name",
@@ -16,6 +17,7 @@ export default function RootLayout({
   return (
     <html lang="en">
       <body className="min-h-screen bg-[var(--bg)] text-[var(--text)]">
+        <Toaster position="top-right" />
         <Navbar />
         {children}
         <Footer />
