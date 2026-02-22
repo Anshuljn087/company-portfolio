@@ -4,11 +4,8 @@ import Link from "next/link";
 export default function Home() {
   return (
     <main>
-      {/* HERO */}
       <section className="max-w-7xl mx-auto px-6 py-24">
-        {/* TEXT + IMAGE PARALLEL */}
         <div className="grid md:grid-cols-2 gap-14 items-center">
-          {/* TEXT */}
           <div>
             <h1 className="text-5xl md:text-4xl font-bold leading-tight text-[var(--primary)]">
               Built To Last,
@@ -32,7 +29,6 @@ export default function Home() {
             </p>
           </div>
 
-          {/* IMAGE */}
           <div className="flex justify-center md:justify-end">
             <Image
               src="https://images.unsplash.com/photo-1555066931-4365d14bab8c"
@@ -45,21 +41,19 @@ export default function Home() {
         </div>
       </section>
 
-      {/* CONTACT + CAREERS FULL WIDTH BG */}
       <section className="bg-[#0B1220] py-24">
         <div className="max-w-7xl mx-auto px-6">
           <div className="grid md:grid-cols-2 gap-16">
-            {/* CONTACT CARD */}
             <div
               className="
-        group text-center rounded-3xl
-        border border-[#243044]
-        bg-[#0F172A]/60
-        backdrop-blur
-        p-10 transition duration-300
-        hover:border-[var(--primary)]
-        hover:shadow-2xl
-      "
+                group text-center rounded-3xl
+                border border-[#243044]
+                bg-[#0F172A]/60
+                backdrop-blur
+                p-10 transition duration-300
+                hover:border-[var(--primary)]
+                hover:shadow-2xl
+              "
             >
               <Image
                 src="https://images.unsplash.com/photo-1551434678-e076c223a692"
@@ -74,42 +68,41 @@ export default function Home() {
               </h3>
 
               <p className="text-[var(--muted)] max-w-md mx-auto">
-                Tell us what you're building or maintaining. We'll suggest the
+                Tell us what you&apos;re building or maintaining. We&apos;ll suggest the
                 most practical technical approach.
               </p>
 
               <Link href="/contact">
                 <button
                   className="
-            mt-10 px-12 py-4 rounded-xl
-            border border-[var(--primary)]
-            text-[var(--primary)]
-            text-lg font-semibold uppercase tracking-wide
-            transition duration-300 ease-in-out
-            hover:bg-[var(--primary)]
-            hover:text-white
-            hover:scale-105
-            hover:shadow-xl
-            active:scale-95
-            w-full sm:w-auto
-          "
+                    mt-10 px-12 py-4 rounded-xl
+                    border border-[var(--primary)]
+                    text-[var(--primary)]
+                    text-lg font-semibold uppercase tracking-wide
+                    transition duration-300 ease-in-out
+                    hover:bg-[var(--primary)]
+                    hover:text-white
+                    hover:scale-105
+                    hover:shadow-xl
+                    active:scale-95
+                    w-full sm:w-auto
+                  "
                 >
                   CONTACT US
                 </button>
               </Link>
             </div>
 
-            {/* CAREERS CARD */}
             <div
               className="
-        group text-center rounded-3xl
-        border border-[#243044]
-        bg-[#0F172A]/60
-        backdrop-blur
-        p-10 transition duration-300
-        hover:border-[var(--primary)]
-        hover:shadow-2xl
-      "
+                group text-center rounded-3xl
+                border border-[#243044]
+                bg-[#0F172A]/60
+                backdrop-blur
+                p-10 transition duration-300
+                hover:border-[var(--primary)]
+                hover:shadow-2xl
+              "
             >
               <Image
                 src="https://images.unsplash.com/photo-1519389950473-47ba0277781c"
@@ -119,9 +112,7 @@ export default function Home() {
                 className="rounded-2xl mx-auto transition duration-500 group-hover:scale-105"
               />
 
-              <h3 className="text-2xl font-semibold mt-8 mb-3">
-                Join Our Team
-              </h3>
+              <h3 className="text-2xl font-semibold mt-8 mb-3">Join Our Team</h3>
 
               <p className="text-[var(--muted)] max-w-md mx-auto">
                 Explore open roles and work with teams building real production
@@ -131,18 +122,18 @@ export default function Home() {
               <Link href="/careers">
                 <button
                   className="
-            mt-10 px-12 py-4 rounded-xl
-            border border-[var(--primary)]
-            text-[var(--primary)]
-            text-lg font-semibold uppercase tracking-wide
-            transition duration-300 ease-in-out
-            hover:bg-[var(--primary)]
-            hover:text-white
-            hover:scale-105
-            hover:shadow-xl
-            active:scale-95
-            w-full sm:w-auto
-          "
+                    mt-10 px-12 py-4 rounded-xl
+                    border border-[var(--primary)]
+                    text-[var(--primary)]
+                    text-lg font-semibold uppercase tracking-wide
+                    transition duration-300 ease-in-out
+                    hover:bg-[var(--primary)]
+                    hover:text-white
+                    hover:scale-105
+                    hover:shadow-xl
+                    active:scale-95
+                    w-full sm:w-auto
+                  "
                 >
                   CAREERS
                 </button>
@@ -152,7 +143,6 @@ export default function Home() {
         </div>
       </section>
 
-      {/* SERVICES GRID */}
       <section className="max-w-7xl mx-auto px-6 py-20">
         <h2 className="text-4xl font-bold text-center mb-16">
           Core IT Support Services
@@ -190,14 +180,12 @@ export default function Home() {
               className="border border-[#1E293B] rounded-xl p-8 hover:border-[var(--primary)] transition"
             >
               <h3 className="text-xl font-semibold mb-3">{s.title}</h3>
-
               <p className="text-[var(--muted)]">{s.text}</p>
             </div>
           ))}
         </div>
       </section>
 
-      {/* WHY CLIENTS CHOOSE */}
       <section className="bg-[#0B1220] py-24 px-6">
         <div className="max-w-6xl mx-auto grid md:grid-cols-2 gap-14 items-center">
           <Image
@@ -214,17 +202,15 @@ export default function Home() {
             </h2>
 
             <ul className="space-y-4 text-[var(--muted)]">
-              <li>✔ Production-safe development approach</li>
-              <li>✔ Experienced MERN & backend engineers</li>
-              <li>✔ Long-term support mindset</li>
-              <li>✔ Clear communication with business teams</li>
-              <li>✔ Fast onboarding into existing systems</li>
+              <li>[x] Production-safe development approach</li>
+              <li>[x] Experienced MERN & backend engineers</li>
+              <li>[x] Long-term support mindset</li>
+              <li>[x] Clear communication with business teams</li>
+              <li>[x] Fast onboarding into existing systems</li>
             </ul>
           </div>
         </div>
       </section>
-
-      
     </main>
   );
 }

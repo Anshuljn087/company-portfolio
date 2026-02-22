@@ -10,14 +10,26 @@ export default function AdminLogin() {
   const [error, setError] = useState("");
 
   async function handleLogin() {
+    setError("");
+
     const res = await fetch("/api/admin/login", {
       method: "POST",
+      headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ email, password }),
     });
 
     if (res.ok) {
       router.push("/admin/dashboard");
     } else {
+      if (res.status === 429) {
+        const retryAfter = res.headers.get("Retry-After");
+        setError(
+          retryAfter
+            ? `Too many attempts. Try again in ${retryAfter} seconds.`
+            : "Too many attempts. Try again later.",
+        );
+        return;
+      }
       setError("Invalid credentials");
     }
   }

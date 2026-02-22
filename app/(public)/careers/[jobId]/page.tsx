@@ -1,18 +1,41 @@
-async function getJob(id: string) {
-  const res = await fetch(
-    `${process.env.NEXT_PUBLIC_SITE_URL}/api/jobs/${id}`,
-    { cache: "no-store" },
-  );
+import { headers } from "next/headers";
 
-  return res.json();
+type JobDetail = {
+  _id: string;
+  title: string;
+  location?: string;
+  description?: string;
+};
+
+async function getJob(id: string) {
+  const headersList = await headers();
+  const host = headersList.get("host");
+  if (!host) return null;
+
+  const protocol = process.env.NODE_ENV === "development" ? "http" : "https";
+  const res = await fetch(`${protocol}://${host}/api/jobs/${id}`, {
+    cache: "no-store",
+  });
+  if (!res.ok) return null;
+
+  return (await res.json()) as JobDetail;
 }
 
 export default async function JobDetail({
   params,
 }: {
-  params: { id: string };
+  params: Promise<{ jobId: string }>;
 }) {
-  const job = await getJob(params.id);
+  const { jobId } = await params;
+  const job = await getJob(jobId);
+
+  if (!job) {
+    return (
+      <main className="max-w-4xl mx-auto px-6 py-20">
+        <p className="text-[var(--muted)]">Job not found.</p>
+      </main>
+    );
+  }
 
   return (
     <main className="max-w-4xl mx-auto px-6 py-20">
@@ -20,7 +43,7 @@ export default async function JobDetail({
 
       <p className="mb-10 text-[var(--muted)]">{job.location || "Remote"}</p>
 
-      <div className="prose mb-14">{job.description}</div>
+      <div className="prose mb-14">{job.description || ""}</div>
 
       {/* APPLY FORM */}
 
