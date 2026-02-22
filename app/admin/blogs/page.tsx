@@ -1,13 +1,20 @@
 import Link from "next/link";
+import { connectDB } from "@/src/lib/db";
+import { Blog } from "@/src/models/Blog";
+import { redirect } from "next/navigation";
+import { isAdminFromCookies } from "@/src/lib/adminAuth";
 
 async function getBlogs() {
-  const res = await fetch("/api/blogs", {
-    cache: "no-store",
-  });
-  return res.json();
+  await connectDB();
+  return Blog.find().sort({ createdAt: -1 }).lean();
 }
 
 export default async function AdminBlogs() {
+  const authenticated = await isAdminFromCookies();
+  if (!authenticated) {
+    redirect("/admin/login");
+  }
+
   const blogs = await getBlogs();
 
   return (

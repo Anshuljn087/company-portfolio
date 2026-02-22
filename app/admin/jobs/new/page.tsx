@@ -1,6 +1,28 @@
 "use client";
 
+import { useEffect, useState } from "react";
+import { useRouter } from "next/navigation";
+
 export default function NewJobPage() {
+  const router = useRouter();
+  const [checkingAuth, setCheckingAuth] = useState(true);
+
+  useEffect(() => {
+    async function checkSession() {
+      const res = await fetch("/api/admin/session", { cache: "no-store" });
+      const data = await res.json();
+
+      if (!data.authenticated) {
+        router.replace("/admin/login");
+        return;
+      }
+
+      setCheckingAuth(false);
+    }
+
+    checkSession();
+  }, [router]);
+
   async function handleSubmit(e: any) {
     e.preventDefault();
     const formData = Object.fromEntries(new FormData(e.target));
@@ -13,6 +35,8 @@ export default function NewJobPage() {
 
     window.location.href = "/admin/jobs";
   }
+
+  if (checkingAuth) return null;
 
   return (
     <section className="max-w-xl mx-auto px-6 py-20">

@@ -1,6 +1,7 @@
 import { connectDB } from "@/src/lib/db";
 import { Blog } from "@/src/models/Blog";
 import { NextResponse } from "next/server";
+import { isAdminFromCookies } from "@/src/lib/adminAuth";
 
 export async function GET() {
   await connectDB();
@@ -13,6 +14,11 @@ export async function GET() {
 }
 
 export async function POST(req: Request) {
+  const authenticated = await isAdminFromCookies();
+  if (!authenticated) {
+    return NextResponse.json({ message: "Unauthorized" }, { status: 401 });
+  }
+
   await connectDB();
   const body = await req.json();
 
