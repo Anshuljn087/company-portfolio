@@ -4,9 +4,22 @@ import { Blog } from "@/src/models/Blog";
 import { redirect } from "next/navigation";
 import { isAdminFromCookies } from "@/src/lib/adminAuth";
 
+type AdminBlog = {
+  _id: string;
+  title: string;
+  slug: string;
+  category?: string;
+  readingTime?: number;
+  views?: number;
+  featured?: boolean;
+  publishedAt?: string;
+  createdAt: string;
+  published: boolean;
+};
+
 async function getBlogs() {
   await connectDB();
-  return Blog.find().sort({ createdAt: -1 }).lean();
+  return (await Blog.find().sort({ createdAt: -1 }).lean()) as AdminBlog[];
 }
 
 export default async function AdminBlogs() {
@@ -30,14 +43,31 @@ export default async function AdminBlogs() {
       </div>
 
       <div className="space-y-4">
-        {blogs.map((blog: any) => (
+        {blogs.map((blog) => (
           <div
             key={blog._id}
             className="border border-[#1E293B] p-4 rounded"
           >
-            <p className="font-semibold">{blog.title}</p>
-            <p className="text-xs text-[var(--muted)]">
-              {blog.published ? "Published" : "Draft"}
+            <div className="flex flex-wrap items-center justify-between gap-2">
+              <p className="font-semibold">{blog.title}</p>
+              <div className="flex items-center gap-2 text-xs">
+                {blog.featured && (
+                  <span className="rounded-full border border-[var(--primary)] px-2 py-1 text-[var(--primary)]">
+                    Featured
+                  </span>
+                )}
+                <span className="text-[var(--muted)]">
+                  {blog.published ? "Published" : "Draft"}
+                </span>
+              </div>
+            </div>
+            <p className="mt-2 text-xs text-[var(--muted)]">/{blog.slug}</p>
+            <p className="mt-1 text-xs text-[var(--muted)]">
+              {blog.category || "Engineering"} | {blog.readingTime || 1} min read
+              | {blog.views || 0} views
+            </p>
+            <p className="mt-1 text-xs text-[var(--muted)]">
+              {new Date(blog.publishedAt || blog.createdAt).toLocaleDateString()}
             </p>
           </div>
         ))}

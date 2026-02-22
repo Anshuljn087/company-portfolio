@@ -1,5 +1,6 @@
 "use client";
 
+import type { FormEvent } from "react";
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 
@@ -23,9 +24,9 @@ export default function NewJobPage() {
     checkSession();
   }, [router]);
 
-  async function handleSubmit(e: any) {
+  async function handleSubmit(e: FormEvent<HTMLFormElement>) {
     e.preventDefault();
-    const formData = Object.fromEntries(new FormData(e.target));
+    const formData = Object.fromEntries(new FormData(e.currentTarget));
 
     await fetch("/api/jobs", {
       method: "POST",
@@ -43,10 +44,30 @@ export default function NewJobPage() {
       <h1 className="text-2xl font-bold mb-6">Add Job</h1>
 
       <form onSubmit={handleSubmit} className="space-y-4">
-        <input name="title" placeholder="Job Title" required className="w-full p-3 bg-[#020617] border border-[#1E293B]" />
-        <input name="location" placeholder="Location / Remote" required className="w-full p-3 bg-[#020617] border border-[#1E293B]" />
-        <input name="experience" placeholder="Experience (e.g. 2–4 years)" required className="w-full p-3 bg-[#020617] border border-[#1E293B]" />
-        <textarea name="description" placeholder="Job Description" required className="w-full p-3 bg-[#020617] border border-[#1E293B]" />
+        <input
+          name="title"
+          placeholder="Job Title"
+          required
+          className="w-full p-3 bg-[#020617] border border-[#1E293B]"
+        />
+        <input
+          name="location"
+          placeholder="Location / Remote"
+          required
+          className="w-full p-3 bg-[#020617] border border-[#1E293B]"
+        />
+        <input
+          name="experience"
+          placeholder="Experience (e.g. 2-4 years)"
+          required
+          className="w-full p-3 bg-[#020617] border border-[#1E293B]"
+        />
+        <textarea
+          name="description"
+          placeholder="Job Description"
+          required
+          className="w-full p-3 bg-[#020617] border border-[#1E293B]"
+        />
 
         <button className="bg-[var(--primary)] px-4 py-2 rounded text-white">
           Create Job
