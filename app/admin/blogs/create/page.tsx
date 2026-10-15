@@ -44,10 +44,15 @@ export default function CreateBlog() {
 
   useEffect(() => {
     async function checkSession() {
-      const res = await fetch("/api/admin/session", { cache: "no-store" });
-      const data = await res.json();
+      let authenticated = false;
+      try {
+        const res = await fetch("/api/admin/session", { cache: "no-store" });
+        authenticated = Boolean((await res.json()).authenticated);
+      } catch {
+        authenticated = false;
+      }
 
-      if (!data.authenticated) {
+      if (!authenticated) {
         router.replace("/admin/login");
         return;
       }

@@ -1,5 +1,10 @@
 import { NextResponse } from "next/server";
-import nodemailer from "nodemailer";
+import {
+  getMailConfig,
+  isValidEmail,
+  limitPublicRequest,
+  oneLine,
+} from "@/src/lib/mail";
 
 type ContactBody = {
   fullName?: string;
@@ -9,19 +14,28 @@ type ContactBody = {
   timeline?: string;
 };
 
-function isValidEmail(email: string) {
-  return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
-}
-
 export async function POST(req: Request) {
-  try {
-    const body = (await req.json()) as ContactBody;
+  const limited = limitPublicRequest(req, "contact");
+  if (limited) return limited;
 
-    const fullName = String(body.fullName || "").trim();
-    const workEmail = String(body.workEmail || "").trim();
-    const companyName = String(body.companyName || "").trim();
-    const currentSituation = String(body.currentSituation || "").trim();
-    const timeline = String(body.timeline || "").trim();
+  try {
+    let body: ContactBody;
+    try {
+      body = (await req.json()) as ContactBody;
+    } catch {
+      return NextResponse.json(
+        { success: false, error: "Invalid request" },
+        { status: 400 },
+      );
+    }
+
+    const fullName = oneLine(body.fullName);
+    const workEmail = oneLine(body.workEmail, 254);
+    const companyName = oneLine(body.companyName);
+    const currentSituation = String(body.currentSituation || "")
+      .trim()
+      .slice(0, 5000);
+    const timeline = oneLine(body.timeline);
 
     if (!fullName || !workEmail || !companyName || !currentSituation) {
       return NextResponse.json(
@@ -37,32 +51,13 @@ export async function POST(req: Request) {
       );
     }
 
-    const smtpUser = process.env.SMTP_USER || process.env.SMTP_EMAIL;
-    if (
-      !smtpUser ||
-      !process.env.SMTP_PASS ||
-      !process.env.SMTP_HOST ||
-      !process.env.ADMIN_EMAIL
-    ) {
-      throw new Error("SMTP is not configured");
-    }
+    const mail = getMailConfig();
+    if (!mail) throw new Error("SMTP is not configured");
 
-    const transporter = nodemailer.createTransport({
-      host: process.env.SMTP_HOST,
-      port: Number(process.env.SMTP_PORT),
-      secure: false,
-      auth: {
-        user: smtpUser,
-        pass: process.env.SMTP_PASS,
-      },
-      tls: {
-        rejectUnauthorized: false,
-      },
-    });
-
-    await transporter.sendMail({
-      from: `"Website Contact" <${smtpUser}>`,
-      to: process.env.ADMIN_EMAIL,
+    await mail.transporter.sendMail({
+      from: `"Website Contact" <${mail.user}>`,
+      to: mail.to,
+      replyTo: workEmail,
       subject: "Start with a conversation - New contact request",
       text: `Full Name: ${fullName}
 Work Email: ${workEmail}
@@ -77,13 +72,8 @@ ${currentSituation}
     return NextResponse.json({ success: true });
   } catch (err: unknown) {
     console.error("CONTACT ERROR:", err);
-    const message = err instanceof Error ? err.message : "Unknown error";
-
     return NextResponse.json(
-      {
-        success: false,
-        error: message,
-      },
+      { success: false, error: "Could not send your message. Please try again later." },
       { status: 500 },
     );
   }

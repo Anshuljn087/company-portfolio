@@ -1,4 +1,6 @@
-import { headers } from "next/headers";
+import { isValidObjectId } from "mongoose";
+import { connectDB } from "@/src/lib/db";
+import { Job } from "@/src/models/Job";
 
 type JobDetail = {
   _id: string;
@@ -8,17 +10,11 @@ type JobDetail = {
 };
 
 async function getJob(id: string) {
-  const headersList = await headers();
-  const host = headersList.get("host");
-  if (!host) return null;
-
-  const protocol = process.env.NODE_ENV === "development" ? "http" : "https";
-  const res = await fetch(`${protocol}://${host}/api/jobs/${id}`, {
-    cache: "no-store",
-  });
-  if (!res.ok) return null;
-
-  return (await res.json()) as JobDetail;
+  if (!isValidObjectId(id)) return null;
+  await connectDB();
+  const job = await Job.findOne({ _id: id, isActive: true }).lean();
+  if (!job) return null;
+  return JSON.parse(JSON.stringify(job)) as JobDetail;
 }
 
 export default async function JobDetail({

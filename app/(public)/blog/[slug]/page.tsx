@@ -24,15 +24,18 @@ type BlogDetail = {
 
 async function getBlog(slug: string) {
   const headersList = await headers();
-  const host = headersList.get("host");
-  if (!host) return null;
+  const isBot = /bot|crawl|spider|slurp|preview|facebookexternalhit/i.test(
+    headersList.get("user-agent") || "",
+  );
 
-  const protocol = process.env.NODE_ENV === "development" ? "http" : "https";
-  const url = `${protocol}://${host}/api/blogs/${slug}`;
-  const res = await fetch(url, { cache: "no-store" });
+  await connectDB();
+  const filter = { slug: slug.toLowerCase(), published: true };
+  const blog = isBot
+    ? await Blog.findOne(filter).lean()
+    : await Blog.findOneAndUpdate(filter, { $inc: { views: 1 } }, { new: true }).lean();
 
-  if (!res.ok) return null;
-  return (await res.json()) as BlogDetail;
+  if (!blog) return null;
+  return JSON.parse(JSON.stringify(blog)) as BlogDetail;
 }
 
 async function getRelatedPosts(slug: string, tags: string[]) {
