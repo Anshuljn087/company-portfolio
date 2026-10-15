@@ -1,30 +1,19 @@
 import { NextResponse } from "next/server";
-import { headers } from "next/headers";
 import {
   ADMIN_SESSION_COOKIE,
+  ADMIN_SESSION_MAX_AGE,
   createAdminSessionToken,
+  safeEqual,
 } from "@/src/lib/adminAuth";
 import {
   clearLoginFailures,
+  getClientIp,
   isLoginBlocked,
   registerLoginFailure,
 } from "@/src/lib/rateLimit";
 
-function getClientIdentifier(
-  ipHeader: string | null,
-  userAgent: string | null,
-) {
-  const ip = ipHeader?.split(",")[0]?.trim() || "unknown-ip";
-  const ua = userAgent || "unknown-ua";
-  return `${ip}:${ua}`;
-}
-
 export async function POST(req: Request) {
-  const requestHeaders = await headers();
-  const ipHeader =
-    requestHeaders.get("x-forwarded-for") || requestHeaders.get("x-real-ip");
-  const userAgent = requestHeaders.get("user-agent");
-  const clientKey = getClientIdentifier(ipHeader, userAgent);
+  const clientKey = getClientIp(req.headers);
 
   const blockState = isLoginBlocked(clientKey);
   if (blockState.blocked) {
@@ -37,12 +26,28 @@ export async function POST(req: Request) {
     );
   }
 
-  const { email, password } = await req.json();
+  let body: { email?: unknown; password?: unknown };
+  try {
+    body = await req.json();
+  } catch {
+    return NextResponse.json({ message: "Invalid request" }, { status: 400 });
+  }
 
-  if (
-    email === process.env.ADMIN_EMAIL &&
-    password === process.env.ADMIN_PASSWORD
-  ) {
+  const email = typeof body.email === "string" ? body.email : "";
+  const password = typeof body.password === "string" ? body.password : "";
+  const adminEmail = process.env.ADMIN_EMAIL;
+  const adminPassword = process.env.ADMIN_PASSWORD;
+
+  if (!adminEmail || !adminPassword || !process.env.ADMIN_SESSION_SECRET) {
+    console.error("Admin auth is not configured");
+    return NextResponse.json({ message: "Server error" }, { status: 500 });
+  }
+
+  // Evaluate both so timing doesn't reveal which field was wrong.
+  const emailOk = safeEqual(email, adminEmail);
+  const passwordOk = safeEqual(password, adminPassword);
+
+  if (emailOk && passwordOk) {
     clearLoginFailures(clientKey);
 
     const token = createAdminSessionToken(email);
@@ -52,7 +57,7 @@ export async function POST(req: Request) {
       secure: process.env.NODE_ENV === "production",
       sameSite: "lax",
       path: "/",
-      maxAge: 60 * 60 * 8,
+      maxAge: ADMIN_SESSION_MAX_AGE,
     });
     return response;
   }

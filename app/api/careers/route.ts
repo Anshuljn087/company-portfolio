@@ -1,5 +1,10 @@
 import { NextResponse } from "next/server";
-import nodemailer from "nodemailer";
+import {
+  getMailConfig,
+  isValidEmail,
+  limitPublicRequest,
+  oneLine,
+} from "@/src/lib/mail";
 
 type ExperiencedPayload = {
   type: "experienced";
@@ -26,35 +31,32 @@ type InternPayload = {
 
 type CareersPayload = ExperiencedPayload | InternPayload;
 
-function isValidEmail(email: string) {
-  return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
+function required(value: string | undefined) {
+  return oneLine(value);
 }
 
-function required(value: string | undefined) {
-  return String(value || "").trim();
+function longText(value: string | undefined) {
+  return String(value || "").trim().slice(0, 5000);
 }
 
 export async function POST(req: Request) {
   try {
-    const body = (await req.json()) as CareersPayload;
-    const smtpUser = process.env.SMTP_USER || process.env.SMTP_EMAIL;
+    const limited = limitPublicRequest(req, "careers");
+    if (limited) return limited;
 
-    if (
-      !smtpUser ||
-      !process.env.SMTP_PASS ||
-      !process.env.SMTP_HOST ||
-      !process.env.ADMIN_EMAIL
-    ) {
-      throw new Error("SMTP is not configured");
+    let body: CareersPayload;
+    try {
+      body = (await req.json()) as CareersPayload;
+    } catch {
+      return NextResponse.json(
+        { success: false, error: "Invalid request" },
+        { status: 400 },
+      );
     }
 
-    const transporter = nodemailer.createTransport({
-      host: process.env.SMTP_HOST,
-      port: Number(process.env.SMTP_PORT),
-      secure: false,
-      auth: { user: smtpUser, pass: process.env.SMTP_PASS },
-      tls: { rejectUnauthorized: false },
-    });
+    const mail = getMailConfig();
+    if (!mail) throw new Error("SMTP is not configured");
+    const { transporter, user: smtpUser, to: adminEmail } = mail;
 
     if (body.type === "experienced") {
       const fullName = required(body.fullName);
@@ -62,9 +64,9 @@ export async function POST(req: Request) {
       const currentRole = required(body.currentRole);
       const yearsOfExperience = required(body.yearsOfExperience);
       const primaryExpertise = required(body.primaryExpertise);
-      const projectEndToEnd = required(body.projectEndToEnd);
+      const projectEndToEnd = longText(body.projectEndToEnd);
       const availability = required(body.availability);
-      const additionalInfo = required(body.additionalInfo);
+      const additionalInfo = longText(body.additionalInfo);
 
       if (
         !fullName ||
@@ -90,7 +92,7 @@ export async function POST(req: Request) {
 
       await transporter.sendMail({
         from: `"Careers Portal" <${smtpUser}>`,
-        to: process.env.ADMIN_EMAIL,
+        to: adminEmail,
         subject: "Experienced professional profile submitted",
         text: `Type: Experienced Professional
 Full Name: ${fullName}
@@ -116,9 +118,9 @@ ${additionalInfo || "Not provided"}
       const email = required(body.email);
       const currentStatus = required(body.currentStatus);
       const areaOfInterest = required(body.areaOfInterest);
-      const whyFullProjects = required(body.whyFullProjects);
+      const whyFullProjects = longText(body.whyFullProjects);
       const availability = required(body.availability);
-      const optionalWork = required(body.optionalWork);
+      const optionalWork = longText(body.optionalWork);
 
       if (
         !fullName ||
@@ -143,7 +145,7 @@ ${additionalInfo || "Not provided"}
 
       await transporter.sendMail({
         from: `"Careers Portal" <${smtpUser}>`,
-        to: process.env.ADMIN_EMAIL,
+        to: adminEmail,
         subject: "Intern interest submitted",
         text: `Type: Intern
 Full Name: ${fullName}
@@ -169,7 +171,9 @@ ${optionalWork || "Not provided"}
     );
   } catch (err: unknown) {
     console.error("CAREERS API ERROR:", err);
-    const message = err instanceof Error ? err.message : "Unknown error";
-    return NextResponse.json({ success: false, error: message }, { status: 500 });
+    return NextResponse.json(
+      { success: false, error: "Could not submit your application. Please try again later." },
+      { status: 500 },
+    );
   }
 }

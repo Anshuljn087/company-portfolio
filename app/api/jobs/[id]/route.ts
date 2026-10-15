@@ -1,16 +1,21 @@
 import { NextRequest, NextResponse } from "next/server";
 import { connectDB } from "@/src/lib/db";
+import { isValidObjectId } from "mongoose";
 import { Job } from "@/src/models/Job";
 
 export async function GET(
   req: NextRequest,
   context: { params: Promise<{ id: string }> }
 ) {
-  await connectDB();
-
   const { id } = await context.params;
 
-  const job = await Job.findById(id);
+  if (!isValidObjectId(id)) {
+    return NextResponse.json({ message: "Job not found" }, { status: 404 });
+  }
+
+  await connectDB();
+
+  const job = await Job.findOne({ _id: id, isActive: true });
 
   if (!job) {
     return NextResponse.json(

@@ -10,10 +10,15 @@ export default function NewJobPage() {
 
   useEffect(() => {
     async function checkSession() {
-      const res = await fetch("/api/admin/session", { cache: "no-store" });
-      const data = await res.json();
+      let authenticated = false;
+      try {
+        const res = await fetch("/api/admin/session", { cache: "no-store" });
+        authenticated = Boolean((await res.json()).authenticated);
+      } catch {
+        authenticated = false;
+      }
 
-      if (!data.authenticated) {
+      if (!authenticated) {
         router.replace("/admin/login");
         return;
       }
@@ -28,11 +33,16 @@ export default function NewJobPage() {
     e.preventDefault();
     const formData = Object.fromEntries(new FormData(e.currentTarget));
 
-    await fetch("/api/jobs", {
+    const res = await fetch("/api/jobs", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify(formData),
     });
+
+    if (!res.ok) {
+      alert("Could not save the job. Please check the fields and try again.");
+      return;
+    }
 
     window.location.href = "/admin/jobs";
   }

@@ -29,6 +29,12 @@ export default async function AdminDashboard() {
         >
           Manage Blogs
         </a>
+        <a
+          href="/admin/jobs"
+          className="border border-[#1E293B] p-6 rounded-lg hover:border-[var(--primary)]"
+        >
+          Manage Jobs
+        </a>
       </div>
     </section>
   );

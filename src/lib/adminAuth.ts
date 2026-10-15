@@ -29,6 +29,13 @@ function sign(payloadB64: string, secret: string) {
   return createHmac("sha256", secret).update(payloadB64).digest("base64url");
 }
 
+/** Constant-time string comparison (hashes first so lengths don't leak). */
+export function safeEqual(a: string, b: string) {
+  const ha = createHmac("sha256", "cmp").update(a).digest();
+  const hb = createHmac("sha256", "cmp").update(b).digest();
+  return timingSafeEqual(ha, hb);
+}
+
 export function createAdminSessionToken(email: string) {
   const payload: SessionPayload = {
     email,
@@ -46,7 +53,12 @@ export function verifyAdminSessionToken(token: string | undefined | null) {
   const [payloadB64, signature] = token.split(".");
   if (!payloadB64 || !signature) return false;
 
-  const expectedSignature = sign(payloadB64, getSecret());
+  let expectedSignature: string;
+  try {
+    expectedSignature = sign(payloadB64, getSecret());
+  } catch {
+    return false;
+  }
   const actual = Buffer.from(signature);
   const expected = Buffer.from(expectedSignature);
 
@@ -61,7 +73,9 @@ export function verifyAdminSessionToken(token: string | undefined | null) {
   }
 
   if (!payload.exp || payload.exp < Math.floor(Date.now() / 1000)) return false;
-  if (payload.email !== process.env.ADMIN_EMAIL) return false;
+  const adminEmail = process.env.ADMIN_EMAIL;
+  if (!adminEmail || typeof payload.email !== "string") return false;
+  if (!safeEqual(payload.email, adminEmail)) return false;
 
   return true;
 }
@@ -72,3 +86,4 @@ export async function isAdminFromCookies() {
 }
 
 export const ADMIN_SESSION_COOKIE = SESSION_COOKIE;
+export const ADMIN_SESSION_MAX_AGE = SESSION_TTL_SECONDS;

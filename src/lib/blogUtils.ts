@@ -32,3 +32,25 @@ export function buildExcerpt(excerpt: string | undefined, content: string) {
   const clean = stripHtml(content).replace(/\s+/g, " ").trim();
   return clean.length > 170 ? `${clean.slice(0, 167)}...` : clean;
 }
+
+export function escapeRegex(input: string) {
+  return input.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+}
+
+/** Only allow http(s) URLs or site-relative paths for cover images. */
+export function cleanImageUrl(input: unknown) {
+  const value = String(input || "").trim();
+  if (!value) return "";
+  if (value.startsWith("/") && !value.startsWith("//")) return value;
+  try {
+    const url = new URL(value);
+    return url.protocol === "https:" || url.protocol === "http:" ? value : "";
+  } catch {
+    return "";
+  }
+}
+
+export function toPositiveInt(value: string | null, fallback: number) {
+  const n = Math.floor(Number(value));
+  return Number.isFinite(n) && n >= 1 ? n : fallback;
+}

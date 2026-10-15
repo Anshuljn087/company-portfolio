@@ -15,8 +15,25 @@ export async function POST(req: Request) {
     return NextResponse.json({ message: "Unauthorized" }, { status: 401 });
   }
 
+  let data: Record<string, unknown>;
+  try {
+    data = await req.json();
+  } catch {
+    return NextResponse.json({ message: "Invalid JSON" }, { status: 400 });
+  }
+
+  const title = String(data.title || "").trim();
+  if (!title) {
+    return NextResponse.json({ message: "Title is required" }, { status: 400 });
+  }
+
   await connectDB();
-  const data = await req.json();
-  const job = await Job.create(data);
+  const job = await Job.create({
+    title,
+    location: String(data.location || "").trim(),
+    experience: String(data.experience || "").trim(),
+    description: String(data.description || "").trim(),
+    isActive: data.isActive === undefined ? true : Boolean(data.isActive),
+  });
   return NextResponse.json(job, { status: 201 });
 }
