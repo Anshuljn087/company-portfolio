@@ -44,7 +44,8 @@ export default function NewJobPage() {
       return;
     }
 
-    window.location.href = "/admin/jobs";
+    router.push("/admin/jobs");
+    router.refresh();
   }
 
   if (checkingAuth) return null;

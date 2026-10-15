@@ -32,16 +32,23 @@ export function getMailConfig() {
 }
 
 /** Returns a 429 response if the caller exceeded the limit, else null. */
-export function limitPublicRequest(req: Request, bucket: string) {
-  const { limited, retryAfterSec } = hitRateLimit(
-    bucket,
-    getClientIp(req.headers),
-    5,
-    10 * 60 * 1000,
-  );
-  if (!limited) return null;
+export async function limitPublicRequest(req: Request, bucket: string) {
+  let result: { limited: boolean; retryAfterSec: number };
+  try {
+    result = await hitRateLimit(
+      bucket,
+      getClientIp(req.headers),
+      5,
+      10 * 60 * 1000,
+    );
+  } catch (err) {
+    // Fail open: a limiter outage shouldn't take the contact forms down.
+    console.error("RATE LIMIT ERROR:", err);
+    return null;
+  }
+  if (!result.limited) return null;
   return NextResponse.json(
     { success: false, error: "Too many requests. Try again later." },
-    { status: 429, headers: { "Retry-After": String(retryAfterSec) } },
+    { status: 429, headers: { "Retry-After": String(result.retryAfterSec) } },
   );
 }

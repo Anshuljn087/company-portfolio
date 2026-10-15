@@ -15,7 +15,7 @@ type ContactBody = {
 };
 
 export async function POST(req: Request) {
-  const limited = limitPublicRequest(req, "contact");
+  const limited = await limitPublicRequest(req, "contact");
   if (limited) return limited;
 
   try {

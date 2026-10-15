@@ -1,19 +1,11 @@
-type AttemptState = {
-  count: number;
-  windowStart: number;
-  blockedUntil: number;
-};
+import { connectDB } from "@/src/lib/db";
+import { RateLimit } from "@/src/models/RateLimit";
 
-const attempts = new Map<string, AttemptState>();
-const buckets = new Map<string, { count: number; resetAt: number }>();
+// Counters live in MongoDB so limits hold across serverless instances and
+// restarts. Each key has a fixed window that starts at its first hit.
 
-const WINDOW_MS = 15 * 60 * 1000;
-const BLOCK_MS = 15 * 60 * 1000;
-const MAX_FAILURES = 5;
-const MAX_TRACKED_CLIENTS = 10000;
-
-// Note: state is per server instance. For multi-instance deployments, back
-// this with a shared store (e.g. Redis/Upstash).
+const LOGIN_WINDOW_MS = 15 * 60 * 1000;
+const LOGIN_MAX_FAILURES = 5;
 
 export function getClientIp(headers: Headers) {
   return (
@@ -23,94 +15,83 @@ export function getClientIp(headers: Headers) {
   );
 }
 
-function cleanupOldEntries(now: number) {
-  if (attempts.size >= MAX_TRACKED_CLIENTS) {
-    for (const [key, state] of attempts.entries()) {
-      const isExpiredWindow = now - state.windowStart > WINDOW_MS;
-      const isUnblocked = state.blockedUntil <= now;
-      if (isExpiredWindow && isUnblocked) {
-        attempts.delete(key);
-      }
-    }
-  }
+/** Atomically increments a fixed-window counter and returns the new state. */
+async function hit(id: string, windowMs: number) {
+  await connectDB();
+  const now = new Date();
+  const newExpiry = new Date(now.getTime() + windowMs);
 
-  if (buckets.size >= MAX_TRACKED_CLIENTS) {
-    for (const [key, state] of buckets.entries()) {
-      if (state.resetAt <= now) buckets.delete(key);
-    }
-  }
-}
+  const doc = await RateLimit.findOneAndUpdate(
+    { _id: id },
+    [
+      {
+        $set: {
+          count: {
+            $cond: [
+              { $gt: [{ $ifNull: ["$expiresAt", new Date(0)] }, now] },
+              { $add: [{ $ifNull: ["$count", 0] }, 1] },
+              1,
+            ],
+          },
+          expiresAt: {
+            $cond: [
+              { $gt: [{ $ifNull: ["$expiresAt", new Date(0)] }, now] },
+              "$expiresAt",
+              newExpiry,
+            ],
+          },
+        },
+      },
+    ],
+    { upsert: true, new: true },
+  ).lean<{ count: number; expiresAt: Date }>();
 
-export function isLoginBlocked(key: string) {
-  const now = Date.now();
-  const state = attempts.get(key);
-  if (!state) return { blocked: false, retryAfterSec: 0 };
-
-  if (state.blockedUntil > now) {
-    return {
-      blocked: true,
-      retryAfterSec: Math.max(
-        1,
-        Math.ceil((state.blockedUntil - now) / 1000),
-      ),
-    };
-  }
-
-  return { blocked: false, retryAfterSec: 0 };
-}
-
-export function registerLoginFailure(key: string) {
-  const now = Date.now();
-  cleanupOldEntries(now);
-
-  const current = attempts.get(key);
-  if (!current) {
-    attempts.set(key, { count: 1, windowStart: now, blockedUntil: 0 });
-    return;
-  }
-
-  if (now - current.windowStart > WINDOW_MS) {
-    current.count = 1;
-    current.windowStart = now;
-    current.blockedUntil = 0;
-    attempts.set(key, current);
-    return;
-  }
-
-  current.count += 1;
-  if (current.count >= MAX_FAILURES) {
-    current.blockedUntil = now + BLOCK_MS;
-  }
-  attempts.set(key, current);
-}
-
-export function clearLoginFailures(key: string) {
-  attempts.delete(key);
+  return {
+    count: doc!.count,
+    retryAfterSec: Math.max(
+      1,
+      Math.ceil((doc!.expiresAt.getTime() - now.getTime()) / 1000),
+    ),
+  };
 }
 
 /** Fixed-window limiter for public endpoints. Counts every call. */
-export function hitRateLimit(
+export async function hitRateLimit(
   bucket: string,
   key: string,
   max: number,
   windowMs: number,
 ) {
-  const now = Date.now();
-  cleanupOldEntries(now);
+  const { count, retryAfterSec } = await hit(`${bucket}:${key}`, windowMs);
+  return count > max
+    ? { limited: true, retryAfterSec }
+    : { limited: false, retryAfterSec: 0 };
+}
 
-  const id = `${bucket}:${key}`;
-  const current = buckets.get(id);
-  if (!current || current.resetAt <= now) {
-    buckets.set(id, { count: 1, resetAt: now + windowMs });
-    return { limited: false, retryAfterSec: 0 };
-  }
+export async function isLoginBlocked(key: string) {
+  await connectDB();
+  const doc = await RateLimit.findOne({
+    _id: `login:${key}`,
+    expiresAt: { $gt: new Date() },
+  }).lean<{ count: number; expiresAt: Date }>();
 
-  current.count += 1;
-  if (current.count > max) {
-    return {
-      limited: true,
-      retryAfterSec: Math.max(1, Math.ceil((current.resetAt - now) / 1000)),
-    };
+  if (!doc || doc.count < LOGIN_MAX_FAILURES) {
+    return { blocked: false, retryAfterSec: 0 };
   }
-  return { limited: false, retryAfterSec: 0 };
+  return {
+    blocked: true,
+    retryAfterSec: Math.max(
+      1,
+      Math.ceil((doc.expiresAt.getTime() - Date.now()) / 1000),
+    ),
+  };
+}
+
+export async function registerLoginFailure(key: string) {
+  await hit(`login:${key}`, LOGIN_WINDOW_MS);
+}
+
+export async function clearLoginFailures(key: string) {
+  await connectDB();
+  await RateLimit.deleteOne({ _id: `login:${key}` });
 }

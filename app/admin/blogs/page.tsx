@@ -3,6 +3,7 @@ import { connectDB } from "@/src/lib/db";
 import { Blog } from "@/src/models/Blog";
 import { redirect } from "next/navigation";
 import { isAdminFromCookies } from "@/src/lib/adminAuth";
+import BlogActions from "./BlogActions";
 
 type AdminBlog = {
   _id: string;
@@ -69,6 +70,7 @@ export default async function AdminBlogs() {
             <p className="mt-1 text-xs text-[var(--muted)]">
               {new Date(blog.publishedAt || blog.createdAt).toLocaleDateString()}
             </p>
+            <BlogActions slug={blog.slug} published={blog.published} />
           </div>
         ))}
       </div>

@@ -15,7 +15,7 @@ import {
 export async function POST(req: Request) {
   const clientKey = getClientIp(req.headers);
 
-  const blockState = isLoginBlocked(clientKey);
+  const blockState = await isLoginBlocked(clientKey);
   if (blockState.blocked) {
     return NextResponse.json(
       { message: "Too many login attempts. Try again later." },
@@ -48,9 +48,9 @@ export async function POST(req: Request) {
   const passwordOk = safeEqual(password, adminPassword);
 
   if (emailOk && passwordOk) {
-    clearLoginFailures(clientKey);
+    await clearLoginFailures(clientKey);
 
-    const token = createAdminSessionToken(email);
+    const token = await createAdminSessionToken(email);
     const response = NextResponse.json({ success: true });
     response.cookies.set(ADMIN_SESSION_COOKIE, token, {
       httpOnly: true,
@@ -62,7 +62,7 @@ export async function POST(req: Request) {
     return response;
   }
 
-  registerLoginFailure(clientKey);
+  await registerLoginFailure(clientKey);
 
   return NextResponse.json(
     { message: "Unauthorized" },

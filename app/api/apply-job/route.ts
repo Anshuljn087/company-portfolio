@@ -29,7 +29,7 @@ function detectResume(buf: Buffer) {
 }
 
 export async function POST(req: Request) {
-  const limited = limitPublicRequest(req, "apply-job");
+  const limited = await limitPublicRequest(req, "apply-job");
   if (limited) return limited;
 
   try {

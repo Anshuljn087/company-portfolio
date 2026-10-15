@@ -41,7 +41,7 @@ function longText(value: string | undefined) {
 
 export async function POST(req: Request) {
   try {
-    const limited = limitPublicRequest(req, "careers");
+    const limited = await limitPublicRequest(req, "careers");
     if (limited) return limited;
 
     let body: CareersPayload;

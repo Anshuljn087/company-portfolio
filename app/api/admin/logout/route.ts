@@ -1,8 +1,20 @@
 import { NextResponse } from "next/server";
-import { ADMIN_SESSION_COOKIE } from "@/src/lib/adminAuth";
+import { cookies } from "next/headers";
+import {
+  ADMIN_SESSION_COOKIE,
+  revokeAdminSessionToken,
+} from "@/src/lib/adminAuth";
 
 export async function POST(req: Request) {
-  const response = NextResponse.redirect(new URL("/admin/login", req.url));
+  const cookieStore = await cookies();
+  try {
+    await revokeAdminSessionToken(cookieStore.get(ADMIN_SESSION_COOKIE)?.value);
+  } catch (err) {
+    console.error("LOGOUT REVOKE ERROR:", err);
+  }
+
+  // 303 so the browser follows the redirect with GET after the form POST.
+  const response = NextResponse.redirect(new URL("/admin/login", req.url), 303);
   response.cookies.set(ADMIN_SESSION_COOKIE, "", {
     httpOnly: true,
     secure: process.env.NODE_ENV === "production",
