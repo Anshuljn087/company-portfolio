@@ -37,7 +37,7 @@ Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/bui
 
 ## Environment variables
 
-Create `.env.local` with:
+Copy `.env.example` to `.env.local` and fill in the values (on Vercel, add them under Project Settings → Environment Variables):
 
 | Variable | Purpose |
 | --- | --- |
